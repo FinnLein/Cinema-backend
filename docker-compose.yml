@@ -74,6 +74,17 @@ services:
       - '5437:5432'
     volumes: 
       - pg_ratings_data:/var/lib/postgresql/data
+  tokens:
+    image: postgres:16
+    container_name: cinema-tokens-database
+    environment: 
+      POSTGRES_USER: ${POSTGRES_NAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${TOKENS_DATABASE_NAME}
+    ports: 
+      - '5438:5432'
+    volumes: 
+      - pg_tokens_data:/var/lib/postgresql/data
 
 volumes:
   redis_data:
@@ -83,3 +94,4 @@ volumes:
   pg_movies_data:
   pg_genres_data:
   pg_ratings_data:
+  pg_tokens_data:

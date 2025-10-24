@@ -10,6 +10,24 @@
   "monorepo": true,
   "root": "apps/gateway",
   "projects": {
+    "accounts": {
+      "type": "application",
+      "root": "apps/accounts",
+      "entryFile": "main",
+      "sourceRoot": "apps/accounts/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/accounts/tsconfig.app.json"
+      }
+    },
+    "actors": {
+      "type": "application",
+      "root": "apps/actors",
+      "entryFile": "main",
+      "sourceRoot": "apps/actors/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/actors/tsconfig.app.json"
+      }
+    },
     "auth": {
       "type": "application",
       "root": "apps/auth",
@@ -46,6 +64,15 @@
         "tsConfigPath": "libs/database/tsconfig.lib.json"
       }
     },
+    "email": {
+      "type": "application",
+      "root": "apps/email",
+      "entryFile": "main",
+      "sourceRoot": "apps/email/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/email/tsconfig.app.json"
+      }
+    },
     "gateway": {
       "type": "application",
       "root": "apps/gateway/",
@@ -53,6 +80,51 @@
       "sourceRoot": "apps/gateway/src",
       "compilerOptions": {
         "tsConfigPath": "apps/gateway/tsconfig.app.json"
+      }
+    },
+    "genres": {
+      "type": "application",
+      "root": "apps/genres",
+      "entryFile": "main",
+      "sourceRoot": "apps/genres/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/genres/tsconfig.app.json"
+      }
+    },
+    "jwt-tokens": {
+      "type": "application",
+      "root": "apps/jwt-tokens",
+      "entryFile": "main",
+      "sourceRoot": "apps/jwt-tokens/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/jwt-tokens/tsconfig.app.json"
+      }
+    },
+    "movies": {
+      "type": "application",
+      "root": "apps/movies",
+      "entryFile": "main",
+      "sourceRoot": "apps/movies/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/movies/tsconfig.app.json"
+      }
+    },
+    "tokens": {
+      "type": "application",
+      "root": "apps/tokens",
+      "entryFile": "main",
+      "sourceRoot": "apps/tokens/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/tokens/tsconfig.app.json"
+      }
+    },
+    "users": {
+      "type": "application",
+      "root": "apps/users",
+      "entryFile": "main",
+      "sourceRoot": "apps/users/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/users/tsconfig.app.json"
       }
     }
   }

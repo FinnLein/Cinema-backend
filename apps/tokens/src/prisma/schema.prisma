@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../prisma/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("TOKENS_DATABASE_URL")
+}
+
+model Tokens {
+  id String @id @default(uuid())
+
+  token String
+  tokenHash String @map("token_hash")
+  email String
+  type TokenType
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  @@map("tokens")
+}
+
+enum TokenType {
+  RESET_PASSWORD
+  TWO_FACTOR
+  EMAIL_CONFIRMATION
+}
