@@ -5,8 +5,9 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../prisma/--generated--"
+  provider = "prisma-client-js"
+  output   = "../prisma/generated"
+  
 }
 
 datasource db {
@@ -15,13 +16,13 @@ datasource db {
 }
 
 model Accounts {
-  id           String @id @default(uuid())
+  id           String    @id @default(uuid())
   type         String
-  provider     String
-  providerId   String @map("provider_id")
-  accessToken  String @map("access_token")
-  refreshToken String @map("refresh_token")
-  expiresIn    Int    @map("expires_in")
+  provider     Providers
+  providerId   String    @map("provider_id")
+  accessToken  String    @map("access_token")
+  refreshToken String    @map("refresh_token")
+  expiresIn    Int       @map("expires_in")
 
   userId String?
 
@@ -30,4 +31,9 @@ model Accounts {
 
   @@unique([provider, providerId])
   @@map("accounts")
+}
+
+enum Providers {
+  GOOGLE
+  YANDEX
 }

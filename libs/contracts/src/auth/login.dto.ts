@@ -11,5 +11,5 @@ export class LoginDto {
 	@IsOptional()
 	@IsString()
 	@MinLength(6, { message: 'Code must be 6 symbols' })
-	code?: string
+	token?: string
 }

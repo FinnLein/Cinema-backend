@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../prisma/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("MOVIES_DATABASE_URL")
+}
+
+model Movies {
+  id        String @id @default(uuid())
+  slug      String @unique
+  title     String @unique
+  poster    String
+  bigPoster String
+  videoUrl  String
+  year      Int
+  duration  Int
+  country   String
+
+  actorsIds String[]
+  genresIds String[]
+
+  isSendTelegram Boolean? @default(false)
+  rating         Float?   @default(4.0)
+  countOpened    Int?     @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  @@map("movies")
+}

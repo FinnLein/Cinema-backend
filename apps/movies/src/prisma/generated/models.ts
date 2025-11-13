@@ -7,5 +7,5 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/Movies.js'
-export type * from './commonInputTypes.js'
+export type * from './commonInputTypes.ts'
+export type * from './models/Movies.ts'

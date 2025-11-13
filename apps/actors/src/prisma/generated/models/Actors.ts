@@ -8,8 +8,7 @@
  * 🟢 You can import this file directly.
  */
 import type * as runtime from "@prisma/client/runtime/library"
-import type * as $Enums from "../enums.js"
-import type * as Prisma from "../internal/prismaNamespace.js"
+import type * as Prisma from "../internal/prismaNamespace.ts"
 
 /**
  * Model Actors
@@ -778,7 +777,7 @@ readonly fields: ActorsFieldRefs;
  * The delegate class that acts as a "Promise-like" for Actors.
  * Why is this prefixed with `Prisma__`?
  * Because we want to prevent naming conflicts as mentioned in
- * https://github.com/prisma/prisma-client-js/issues/707
+ * https://github.com/prisma/prisma-client-ts/issues/707
  */
 export interface Prisma__ActorsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"

@@ -1,8 +1,11 @@
 export const USERS_PATTERNS = {
-	FIND: 'users.find',
-	FIND_BY_EMAIL: 'users.findByEmail',
-	FIND_ALL: 'user.findAll',
-	GET_PROFILE: 'user.getProfile',
-	UPDATE_PROFILE: 'user.updateProfile',
-	CREATE: 'user.create'
+	GET_BY_ID: 'users.getById',
+	GET_BY_EMAIL: 'users.getByEmail',
+	GET_ALL: 'users.getAll',
+	GET_PROFILE: 'users.getProfile',
+	UPDATE_PROFILE: 'users.updateProfile',
+	CREATE: 'users.create',
+	GET_OR_CREATE: 'users.getOrCreate',
+	CONFIRM_EMAIL: 'users.confirmEmail',
+	NEW_PASSWORD: 'users.newPassword'
 }

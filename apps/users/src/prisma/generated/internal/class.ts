@@ -11,7 +11,7 @@
  */
 
 import * as runtime from "@prisma/client/runtime/library"
-import type * as Prisma from "./prismaNamespace.js"
+import type * as Prisma from "./prismaNamespace.ts"
 
 
 const config: runtime.GetPrismaClientConfig = {
@@ -22,7 +22,7 @@ const config: runtime.GetPrismaClientConfig = {
       "value": "prisma-client"
     },
     "output": {
-      "value": "C:\\Users\\User\\Desktop\\projects\\cinema\\cinema-backend\\apps\\users\\src\\generated",
+      "value": "C:\\Users\\User\\Desktop\\projects\\cinema\\cinema-backend\\apps\\users\\src\\prisma\\generated",
       "fromEnvVar": null
     },
     "config": {
@@ -39,13 +39,14 @@ const config: runtime.GetPrismaClientConfig = {
     "sourceFilePath": "C:\\Users\\User\\Desktop\\projects\\cinema\\cinema-backend\\apps\\users\\src\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
-  "relativePath": "../prisma",
+  "relativePath": "..",
   "clientVersion": "6.18.0",
   "engineVersion": "34b5a692b7bd79939a9a2c3ef97d816e749cda2f",
   "datasourceNames": [
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -54,8 +55,8 @@ const config: runtime.GetPrismaClientConfig = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client\"\n  output   = \"../generated\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"USERS_DATABASE_URL\")\n}\n\nmodel Users {\n  id String @id @default(uuid())\n\n  username    String\n  email       String     @unique\n  password    String\n  picture     String?\n  role        UserRole[] @default([USER])\n  isVerified  Boolean    @default(false) @map(\"is_verified\")\n  isTwoFactor Boolean    @default(false) @map(\"is_two_factor\")\n  method      AuthMethod\n\n  createdAt DateTime @default(now()) @map(\"created_at\")\n  updatedAt DateTime @updatedAt() @map(\"updated_at\")\n\n  @@map(\"users\")\n}\n\nenum UserRole {\n  ADMIN\n  USER\n  PREMIUM\n}\n\nenum AuthMethod {\n  CREDENTIALS\n  GOOGLE\n  YANDEX\n}\n",
-  "inlineSchemaHash": "289e1e8c36319110eeff4f6eef95d351d9031a312478aecbe28d613dd05dd2a7",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client\"\n  output   = \"../prisma/generated\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"USERS_DATABASE_URL\")\n}\n\nmodel Users {\n  id          String     @id @default(uuid())\n  username    String\n  email       String     @unique\n  password    String\n  picture     String?\n  role        UserRole[] @default([USER])\n  isVerified  Boolean    @default(false) @map(\"is_verified\")\n  isTwoFactor Boolean    @default(false) @map(\"is_two_factor\")\n  method      AuthMethod\n\n  createdAt DateTime @default(now()) @map(\"created_at\")\n  updatedAt DateTime @updatedAt() @map(\"updated_at\")\n\n  @@map(\"users\")\n}\n\nenum UserRole {\n  ADMIN\n  USER\n  PREMIUM\n}\n\nenum AuthMethod {\n  CREDENTIALS\n  GOOGLE\n  YANDEX\n}\n",
+  "inlineSchemaHash": "32cbb8475fd81ad45e95a172c110de320d110e5ca891913a57b0a7f781ebd7a4",
   "copyEngine": true,
   "runtimeDataModel": {
     "models": {},

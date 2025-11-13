@@ -3,9 +3,9 @@ import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface 
 
 @ValidatorConstraint({ name: 'PasswordMatch', async: false })
 export class PasswordMatchConstraint implements ValidatorConstraintInterface {
-	validate(repeatPassword: string, validationArguments?: ValidationArguments): Promise<boolean> | boolean {
+	validate(passwordRepeat: string, validationArguments?: ValidationArguments): Promise<boolean> | boolean {
 		const obj = validationArguments.object as RegisterDto
-		return repeatPassword === obj.password
+		return passwordRepeat === obj.password
 	}
 	defaultMessage(validationArguments?: ValidationArguments): string {
 		return 'Passwords do not match'

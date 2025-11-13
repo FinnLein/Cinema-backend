@@ -24,7 +24,6 @@ export abstract class BasePrismaService<T extends IBasePrismaClient> implements 
 					const delay = Math.pow(retryCount, 2) * 1000
 					this.logger.log(`Retry in ${delay}ms...`)
 					await new Promise(resolve => setTimeout(resolve, delay))
-					return
 				} else {
 					this.logger.error('Max connection attempt reached. Started without connection')
 					return
@@ -33,8 +32,9 @@ export abstract class BasePrismaService<T extends IBasePrismaClient> implements 
 		}
 	}
 	async onModuleDestroy() {
-		this.logger.log(`Disconnecting from database: ${this.serviceName}`)
-		await this.client.$disconnect()
+		this.logger.log(`Connecting to database: ${this.serviceName}`)
+		await this.client.$connect()
+		this.logger.log(`Successfully connected to database: ${this.serviceName}`)
+		return
 	}
-
 }

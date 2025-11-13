@@ -20,8 +20,8 @@ export class JwtTokensController {
   public async blacklist(@Payload() token: string) {
     return this.jwtTokensService.blacklistToken(token)
   }
-  @MessagePattern(JWT_TOKENS_PATTERNS.GENERATE)
-  public async getHello(@Payload() token) {
+  @MessagePattern(JWT_TOKENS_PATTERNS.CHECK_BLACKLIST)
+  public async checkBlacklistToken(@Payload() token: string) {
     return this.jwtTokensService.checkBlacklistToken(token)
   }
 }

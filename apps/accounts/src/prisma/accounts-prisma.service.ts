@@ -1,6 +1,6 @@
 import { BasePrismaService } from '@app/database/prisma'
 import { Injectable, Logger } from '@nestjs/common'
-import { PrismaClient as AccountsPrismaClient } from './--generated--/client'
+import { PrismaClient as AccountsPrismaClient } from './generated/client'
 
 @Injectable()
 export class AccountsPrismaService extends BasePrismaService<AccountsPrismaClient> {

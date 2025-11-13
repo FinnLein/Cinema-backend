@@ -1,0 +1,3 @@
+export const GOOGLE_AUTH_OPTIONS = Symbol('GOOGLE_AUTH_OPTIONS')
+export const YANDEX_AUTH_OPTIONS = Symbol('YANDEX_AUTH_OPTIONS')
+export const OAUTH_PROVIDERS = Symbol('OAUTH_PROVIDERS')

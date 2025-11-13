@@ -1,6 +1,6 @@
 import { USERS_CLIENT } from '@app/common/client-config/clients.constants'
+import { ACCESS_TOKEN_EXPIRATION, REFRESH_TOKEN_EXPIRATION } from '@app/common/constants/tokens.constant'
 import { createHashSha256 } from '@app/common/utils/create-hash'
-import { ms } from '@app/common/utils/ms.util'
 import { UserDto, UserRole } from '@app/contracts/users/user.dto'
 import { USERS_PATTERNS } from '@app/contracts/users/users.patterns'
 import { REDIS_CLIENT } from '@app/database/redis/redis.constants'
@@ -12,8 +12,7 @@ import { lastValueFrom } from 'rxjs'
 
 @Injectable()
 export class JwtTokensService {
-  private readonly ACCESS_TOKEN_EXPIRATION = '15m'
-  private readonly REFRESH_TOKEN_EXPIRATION = '30d'
+
   private readonly REDIS_REFRESH_TOKEN_PREFIX = 'refreshToken:sha256:'
   private readonly REDIS_BLACKLIST_TOKEN_PREFIX = 'blacklistToken:sha256:'
 
@@ -27,11 +26,11 @@ export class JwtTokensService {
     const data = { id, role }
 
     const accessToken = this.jwt.sign(data, {
-      expiresIn: this.ACCESS_TOKEN_EXPIRATION
+      expiresIn: `${ACCESS_TOKEN_EXPIRATION}m`
     })
 
     const refreshToken = this.jwt.sign(data, {
-      expiresIn: this.REFRESH_TOKEN_EXPIRATION
+      expiresIn: `${REFRESH_TOKEN_EXPIRATION}d`
     })
 
     await this.saveRefreshToken(id, refreshToken)
@@ -46,7 +45,7 @@ export class JwtTokensService {
 
     if (!result) throw new RpcException({ statusCode: HttpStatus.UNAUTHORIZED, message: 'Refresh token expired or not exist' })
 
-    const user = await lastValueFrom(this.usersClient.send<UserDto>(USERS_PATTERNS.FIND, result.id))
+    const user = await lastValueFrom(this.usersClient.send<UserDto>(USERS_PATTERNS.GET_BY_ID, result.id))
 
     if (!user) throw new RpcException({ statusCode: HttpStatus.NOT_FOUND, message: 'User not found' })
 
@@ -55,7 +54,6 @@ export class JwtTokensService {
     await this.blacklistToken(refreshToken)
 
     return this.generate(user.id, user.role)
-
   }
 
   public async blacklistToken(token: string) {
@@ -80,7 +78,7 @@ export class JwtTokensService {
 
   private async saveRefreshToken(userId: string, refreshToken: string) {
     const key = createHashSha256(refreshToken)
-    return this.redis.set(this.REDIS_REFRESH_TOKEN_PREFIX + userId, key, 'EX', ms(this.REFRESH_TOKEN_EXPIRATION) / 1000)
+    return this.redis.set(this.REDIS_REFRESH_TOKEN_PREFIX + userId, key, 'EX', REFRESH_TOKEN_EXPIRATION * 24 * 60 * 60)
   }
 
   private async verifyRefreshToken(userId: string, refreshToken: string) {
