@@ -1,6 +1,6 @@
 import { ClientConfigModule } from '@app/common/client-config/client-config.module'
 import { ClientConfigService } from '@app/common/client-config/client-config.service'
-import { AUTH_CLIENT, JWT_TOKENS_CLIENT } from '@app/common/client-config/clients.constants'
+import { AUTH_CLIENT, JWT_TOKENS_CLIENT, USERS_CLIENT } from '@app/common/client-config/clients.constants'
 import { IS_DEV } from '@app/common/utils/is-dev.util'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
@@ -12,6 +12,7 @@ import { ProvidersService } from 'apps/auth/src/oauth/providers.service'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
 import { CheckBlacklistGuard } from './guards/check-blacklist.guard'
+import { JwtStrategy } from './strategies/jwt.strategy'
 import { TokensService } from './tokens.service'
 
 @Module({
@@ -29,12 +30,18 @@ import { TokensService } from './tokens.service'
         useFactory: (config: ClientConfigService) => config.JwtTokensClientOptions,
         inject: [ClientConfigService]
       },
+      {
+        name: USERS_CLIENT,
+        imports: [ClientConfigModule],
+        useFactory: (config: ClientConfigService) => config.UsersClientOptions,
+        inject: [ClientConfigService]
+      },
     ]),
     ThrottlerModule.forRoot({
       throttlers: [
         {
           name: 'short',
-          ttl: 300,
+          ttl: 30000,
           limit: 5
         }
       ]
@@ -44,7 +51,7 @@ import { TokensService } from './tokens.service'
       envFilePath: '/.env',
       ignoreEnvFile: !IS_DEV
     }),
-    ProvidersModule
+    ProvidersModule,
   ],
   controllers: [AuthController],
   providers: [
@@ -54,7 +61,8 @@ import { TokensService } from './tokens.service'
     },
     AuthService,
     TokensService,
-    ProvidersService
+    ProvidersService,
+    JwtStrategy
   ],
 })
 export class AuthModule { }

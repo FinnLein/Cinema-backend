@@ -1,12 +1,10 @@
-import { AUTH_CLIENT } from '@app/common/client-config/clients.constants'
 import { Auth } from '@app/common/decorators/auth.decorator'
 import { type TOAuthProviders } from '@app/common/types/social/oauth-providers.types'
 import { LoginDto } from '@app/contracts/auth/login.dto'
 import { RegisterDto } from '@app/contracts/auth/register.dto'
-import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Param, Post, Query, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, Res, UnauthorizedException, UseGuards } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { ClientProxy } from '@nestjs/microservices'
-import { Throttle } from '@nestjs/throttler'
+import { ThrottlerGuard } from '@nestjs/throttler'
 //! Very bad decision. It's directly from microservices
 import { ProvidersService } from 'apps/auth/src/oauth/providers.service'
 import { type Response } from 'express'
@@ -18,7 +16,6 @@ import { TokensService } from './tokens.service'
 @Controller('auth')
 export class AuthController {
   constructor(
-    @Inject(AUTH_CLIENT) private readonly authClient: ClientProxy,
     private readonly authService: AuthService,
     private readonly tokensService: TokensService,
     private readonly config: ConfigService,
@@ -26,14 +23,15 @@ export class AuthController {
   ) {
   }
 
+  // Auth
+
   @Post('register')
   @HttpCode(HttpStatus.OK)
   public async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto)
   }
-
   @Post('login')
-  @Throttle({ default: { limit: 5, ttl: 300 } })
+  @UseGuards(ThrottlerGuard)
   @HttpCode(HttpStatus.OK)
   public async login(
     @Body() dto: LoginDto,
@@ -60,6 +58,8 @@ export class AuthController {
 
     return { message: 'You have successfully log out.' }
   }
+
+  // OAuth
 
   @UseGuards(ProvidersGuard)
   @Get('oauth/connect/:provider')
@@ -104,4 +104,19 @@ export class AuthController {
     return res.redirect(this.config.getOrThrow<string>('ALLOWED_ORIGIN') + '/profile')
   }
 
+  // Tokens
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  public async refresh(
+    @RefreshToken() refreshToken: string,
+    @Res({passthrough: true}) res: Response
+  ) {
+    const { accessToken, refreshToken: newRefreshToken, ...response } = await this.authService.refresh(refreshToken)
+
+    this.tokensService.addAccessTokenToResponse(accessToken, res)
+    this.tokensService.addRefreshTokenToResponse(newRefreshToken, res)
+
+    return response
+  }
 }
