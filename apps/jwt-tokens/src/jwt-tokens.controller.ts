@@ -12,7 +12,7 @@ export class JwtTokensController {
   public async generate(@Payload() payload: { id: string, role: UserRole[] }) {
     return this.jwtTokensService.generate(payload.id, payload.role)
   }
-  @MessagePattern(JWT_TOKENS_PATTERNS.GET_NEW)
+  @MessagePattern(JWT_TOKENS_PATTERNS.REFRESH)
   public async getNew(@Payload() refreshToken: string) {
     return this.jwtTokensService.getNewTokens(refreshToken)
   }

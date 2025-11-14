@@ -47,6 +47,4 @@ export class UsersController {
   public async newPassword(@Payload() payload: {id: string, dto: NewPasswordDto}) {
     return this.usersService.newPassword(payload.id, payload.dto)
   }
-
-
 }

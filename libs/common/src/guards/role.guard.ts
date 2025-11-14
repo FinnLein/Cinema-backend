@@ -1,4 +1,4 @@
-import { UserDto, UserRole } from '@app/contracts/users/user.dto'
+import { User, UserRole } from '@app/contracts/users/user.dto'
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { ROLES_KEY } from '../decorators/roles.decorator'
@@ -15,7 +15,7 @@ export class RoleGuard implements CanActivate {
 		if (!role) return true
 
 		const req = context.switchToHttp().getRequest()
-		const user = req?.user as UserDto
+		const user = req?.user as User
 
 		const hasRole = user.role.some(r => role.includes(r))
 		if (!hasRole) throw new ForbiddenException('Forbidden resource')

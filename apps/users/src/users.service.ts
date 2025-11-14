@@ -1,7 +1,7 @@
 import { NewPasswordDto } from '@app/contracts/email/new-password.dto'
 import { CreateUserDto } from '@app/contracts/users/create-user.dto'
 import { UpdateUserDto } from '@app/contracts/users/update-user.dto'
-import { UserDto } from '@app/contracts/users/user.dto'
+import { User } from '@app/contracts/users/user.dto'
 import { Injectable } from '@nestjs/common'
 import { hash } from 'argon2'
 import { UsersPrismaService } from './prisma'
@@ -10,11 +10,11 @@ import { UsersPrismaService } from './prisma'
 export class UsersService {
   constructor(private readonly prisma: UsersPrismaService) { }
 
-  public async getAll(): Promise<UserDto[]> {
+  public async getAll(): Promise<User[]> {
     return this.prisma.user.findMany()
   }
 
-  public async getById(id: string): Promise<UserDto> {
+  public async getById(id: string): Promise<User> {
     return this.prisma.user.findUnique({
       where: {
         id
@@ -22,7 +22,7 @@ export class UsersService {
     })
   }
 
-  public async getByEmail(email: string): Promise<UserDto> {
+  public async getByEmail(email: string): Promise<User> {
     return this.prisma.user.findUnique({
       where: {
         email
@@ -30,7 +30,7 @@ export class UsersService {
     })
   }
 
-  public async updateProfile(id: string, dto: UpdateUserDto): Promise<UserDto> {
+  public async updateProfile(id: string, dto: UpdateUserDto): Promise<User> {
     return this.prisma.user.update({
       where: {
         id
@@ -42,7 +42,7 @@ export class UsersService {
 
   }
 
-  public async create(dto: CreateUserDto): Promise<UserDto> {
+  public async create(dto: CreateUserDto): Promise<User> {
     return this.prisma.user.create({
       data: {
         ...dto,
@@ -51,7 +51,7 @@ export class UsersService {
     })
   }
 
-  public async getOrCreate(id: string | null, dto: CreateUserDto): Promise<UserDto> {
+  public async getOrCreate(id: string | null, dto: CreateUserDto): Promise<User> {
     let user = this.getById(id)
 
     if (!user) {

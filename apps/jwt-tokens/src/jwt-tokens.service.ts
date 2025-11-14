@@ -1,7 +1,7 @@
 import { USERS_CLIENT } from '@app/common/client-config/clients.constants'
 import { ACCESS_TOKEN_EXPIRATION, REFRESH_TOKEN_EXPIRATION } from '@app/common/constants/tokens.constant'
 import { createHashSha256 } from '@app/common/utils/create-hash'
-import { UserDto, UserRole } from '@app/contracts/users/user.dto'
+import { User, UserRole } from '@app/contracts/users/user.dto'
 import { USERS_PATTERNS } from '@app/contracts/users/users.patterns'
 import { REDIS_CLIENT } from '@app/database/redis/redis.constants'
 import { HttpStatus, Inject, Injectable } from '@nestjs/common'
@@ -45,11 +45,11 @@ export class JwtTokensService {
 
     if (!result) throw new RpcException({ statusCode: HttpStatus.UNAUTHORIZED, message: 'Refresh token expired or not exist' })
 
-    const user = await lastValueFrom(this.usersClient.send<UserDto>(USERS_PATTERNS.GET_BY_ID, result.id))
+    const user = await lastValueFrom(this.usersClient.send<User>(USERS_PATTERNS.GET_BY_ID, result.id))
 
     if (!user) throw new RpcException({ statusCode: HttpStatus.NOT_FOUND, message: 'User not found' })
 
-    await this.verifyRefreshToken(result.userId, refreshToken)
+    await this.verifyRefreshToken(result.id, refreshToken)
 
     await this.blacklistToken(refreshToken)
 
@@ -78,6 +78,7 @@ export class JwtTokensService {
 
   private async saveRefreshToken(userId: string, refreshToken: string) {
     const key = createHashSha256(refreshToken)
+    console.log(userId, 'save')
     return this.redis.set(this.REDIS_REFRESH_TOKEN_PREFIX + userId, key, 'EX', REFRESH_TOKEN_EXPIRATION * 24 * 60 * 60)
   }
 

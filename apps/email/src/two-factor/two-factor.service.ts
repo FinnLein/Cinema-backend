@@ -1,7 +1,7 @@
 import { TOKENS_CLIENT, USERS_CLIENT } from '@app/common/client-config/clients.constants'
 import { createHashSha256 } from '@app/common/utils/create-hash'
 import { CreateTokenDto } from '@app/contracts/tokens/create-token.dto'
-import { TokenDto, TokenType } from '@app/contracts/tokens/token.dto'
+import { Token, TokenType } from '@app/contracts/tokens/token.dto'
 import { TOKENS_PATTERNS } from '@app/contracts/tokens/tokens.patterns'
 import { TwoFactorDto } from '@app/contracts/tokens/two-factor.dto'
 import { HttpStatus, Inject, Injectable } from '@nestjs/common'
@@ -30,7 +30,7 @@ export class TwoFactorService {
 	public async verifyToken(dto: TwoFactorDto) {
 		const now = new Date()
 
-		const existingToken = await lastValueFrom(this.tokensClient.send<TokenDto>(TOKENS_PATTERNS.FIND, {
+		const existingToken = await lastValueFrom(this.tokensClient.send<Token>(TOKENS_PATTERNS.FIND, {
 			token: dto.token,
 			type: TokenType.TWO_FACTOR
 		}))
@@ -56,14 +56,14 @@ export class TwoFactorService {
 		const token = Math.floor(Math.random() * (1_000_000 - 100_000) + 100_000).toString()
 		const expiresAt = new Date(new Date().getTime() + 300_000)
 
-		const existingToken = await lastValueFrom(this.tokensClient.send<TokenDto>(TOKENS_PATTERNS.FIND_BY_EMAIL, {
+		const existingToken = await lastValueFrom(this.tokensClient.send<Token>(TOKENS_PATTERNS.FIND_BY_EMAIL, {
 			email,
 			type: TokenType.TWO_FACTOR
 		}))
 
 		if (existingToken) await lastValueFrom(this.tokensClient.send(TOKENS_PATTERNS.DELETE, existingToken.id))
 
-		await lastValueFrom(this.tokensClient.send<TokenDto, CreateTokenDto>(TOKENS_PATTERNS.CREATE, {
+		await lastValueFrom(this.tokensClient.send<Token, CreateTokenDto>(TOKENS_PATTERNS.CREATE, {
 			token,
 			expiresAt,
 			email,

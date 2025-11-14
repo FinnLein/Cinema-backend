@@ -1,6 +1,6 @@
 import { TOAuthProviders } from '@app/common/types/social/oauth-providers.types'
 import { CreateAccountDto } from '@app/contracts/accounts/account-create.dto'
-import { AccountDto } from '@app/contracts/accounts/account.dto'
+import { Account } from '@app/contracts/accounts/account.dto'
 import { Injectable } from '@nestjs/common'
 import { AccountsPrismaService } from './prisma'
 
@@ -10,7 +10,7 @@ export class AccountsService {
     private readonly prisma: AccountsPrismaService
   ) { }
 
-  public async getById(id: string, provider: TOAuthProviders): Promise<AccountDto> {
+  public async getById(id: string, provider: TOAuthProviders): Promise<Account> {
     return this.prisma.accounts.findUnique({
       where: {
         id,
@@ -18,7 +18,7 @@ export class AccountsService {
       }
     })
   }
-  public async getByProviderId(providerId: string, provider: TOAuthProviders): Promise<AccountDto> {
+  public async getByProviderId(providerId: string, provider: TOAuthProviders): Promise<Account> {
     return this.prisma.accounts.findUnique({
       where: {
         provider_providerId: {
