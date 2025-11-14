@@ -1,3 +1,3 @@
-import { AccountDto } from './account.dto'
+import { Account } from './account.dto'
 
-export class CreateAccountDto extends AccountDto { }
+export class CreateAccountDto extends Account { }

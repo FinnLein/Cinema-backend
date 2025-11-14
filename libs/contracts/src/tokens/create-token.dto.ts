@@ -1,3 +1,3 @@
-import { TokenDto } from './token.dto'
+import { Token } from './token.dto'
 
-export class CreateTokenDto extends TokenDto{}
+export class CreateTokenDto extends Token{}

@@ -2,7 +2,6 @@ export const USERS_PATTERNS = {
 	GET_BY_ID: 'users.getById',
 	GET_BY_EMAIL: 'users.getByEmail',
 	GET_ALL: 'users.getAll',
-	GET_PROFILE: 'users.getProfile',
 	UPDATE_PROFILE: 'users.updateProfile',
 	CREATE: 'users.create',
 	GET_OR_CREATE: 'users.getOrCreate',

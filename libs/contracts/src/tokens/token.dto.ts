@@ -8,7 +8,7 @@ export const TokenType = {
 
 export type TokenType = (typeof TokenType)[keyof typeof TokenType]
 
-export class TokenDto {
+export class Token {
 	@IsOptional()
 	id?: string
 

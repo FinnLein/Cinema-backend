@@ -4,7 +4,7 @@ services:
     image: postgres:16
     container_name: cinema-users-database
     environment: 
-      POSTGRES_USER: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${USERS_DATABASE_NAME}
     ports: 
@@ -15,7 +15,7 @@ services:
     image: postgres:16
     container_name: cinema-accounts-database
     environment: 
-      POSTGRES_USER: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${ACCOUNTS_DATABASE_NAME}
     ports: 
@@ -26,7 +26,7 @@ services:
     image: postgres:16
     container_name: cinema-actors-database
     environment: 
-      POSTGRES_USER: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${ACTORS_DATABASE_NAME}
     ports: 
@@ -37,7 +37,7 @@ services:
     image: postgres:16
     container_name: cinema-movies-database
     environment: 
-      POSTGRES_USER: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${MOVIES_DATABASE_NAME}
     ports: 
@@ -48,7 +48,7 @@ services:
     image: postgres:16
     container_name: cinema-genres-database
     environment: 
-      POSTGRES_USER: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${GENRES_DATABASE_NAME}
     ports: 
@@ -59,7 +59,7 @@ services:
     image: postgres:16
     container_name: cinema-ratings-database
     environment: 
-      POSTGRES_USER: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${RATINGS_DATABASE_NAME}
     ports: 
@@ -70,7 +70,7 @@ services:
     image: postgres:16
     container_name: cinema-tokens-database
     environment: 
-      POSTGRES_USER: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${TOKENS_DATABASE_NAME}
     ports: 

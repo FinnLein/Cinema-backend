@@ -1,14 +1,12 @@
 import { type TOAuthProviders } from '@app/common/types/social/oauth-providers.types'
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
 
-export class AccountDto {
-	
+export class Account {	
 	@IsString()
 	@IsNotEmpty()
 	@IsOptional()
 	id?: string
 
-	
 	@IsString()
 	@IsNotEmpty()
 	userId: string
