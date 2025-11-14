@@ -1,5 +1,8 @@
+import { Auth } from '@app/common/decorators/auth.decorator'
 import { CreateUserDto } from '@app/contracts/users/create-user.dto'
-import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common'
+import { UpdateUserDto } from '@app/contracts/users/update-user.dto'
+import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post } from '@nestjs/common'
+import { CurrentUser } from './decorators/current-user.decorator'
 import { UsersService } from './users.service'
 
 @Controller('users')
@@ -10,6 +13,20 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   public async getAll() {
     return this.usersService.getAll()
+  }
+
+  @Auth()
+  @Get('profile')
+  @HttpCode(HttpStatus.OK)
+  public async getProfile(@CurrentUser('id') id: string){
+    return this.usersService.getProfile(id)
+  }
+
+  @Auth()
+  @Patch('profile')
+  @HttpCode(HttpStatus.OK)
+  public async updateProfile(@CurrentUser('id') id: string, @Body() dto: UpdateUserDto){
+    return this.usersService.updateProfile(id, dto)
   }
 
   @Post()
