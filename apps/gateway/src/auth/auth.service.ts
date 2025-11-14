@@ -1,9 +1,10 @@
-import { AUTH_CLIENT } from '@app/common/client-config/clients.constants'
+import { AUTH_CLIENT, JWT_TOKENS_CLIENT } from '@app/common/client-config/clients.constants'
 import { TOAuthProviders } from '@app/common/types/social/oauth-providers.types'
 import { AUTH_PATTERNS } from '@app/contracts/auth/auth.patterns'
 import { IAuthResponse } from '@app/contracts/auth/auth.types'
 import { LoginDto } from '@app/contracts/auth/login.dto'
 import { RegisterDto } from '@app/contracts/auth/register.dto'
+import { JWT_TOKENS_PATTERNS } from '@app/contracts/jwt-tokens/jwt-tokens.patterns'
 import { Inject, Injectable } from '@nestjs/common'
 import { ClientProxy } from '@nestjs/microservices'
 import { lastValueFrom } from 'rxjs'
@@ -11,7 +12,8 @@ import { lastValueFrom } from 'rxjs'
 @Injectable()
 export class AuthService {
 	constructor(
-		@Inject(AUTH_CLIENT) private readonly authClient: ClientProxy
+		@Inject(AUTH_CLIENT) private readonly authClient: ClientProxy,
+		@Inject(JWT_TOKENS_CLIENT) private readonly jwtTokensClient: ClientProxy
 	) { }
 
 	public async register(dto: RegisterDto) {
@@ -28,5 +30,9 @@ export class AuthService {
 
 	public async oauth(code: string, provider: TOAuthProviders, state: string) {
 		return lastValueFrom(this.authClient.send<IAuthResponse>(AUTH_PATTERNS.OAUTH, { code, provider, state }))
+	}
+
+	public async refresh(refreshToken: string){
+		return lastValueFrom(this.jwtTokensClient.send<IAuthResponse>(JWT_TOKENS_PATTERNS.REFRESH, refreshToken))
 	}
 }
