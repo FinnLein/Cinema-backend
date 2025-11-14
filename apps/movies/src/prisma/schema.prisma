@@ -24,10 +24,6 @@ model Movies {
   year Int 
   duration Int 
   country String 
-
-  actorsIds String[]
-  genresIds String[]
-
   isSendTelegram Boolean? @default(false)
   rating Float? @default(4.0)
   countOpened Int? @default(0)

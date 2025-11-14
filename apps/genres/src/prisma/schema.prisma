@@ -17,6 +17,7 @@ datasource db {
 model Genres {
   id String @id @default(uuid())
 
+  movieId String[]
   name String
   slug String @unique
   description String 

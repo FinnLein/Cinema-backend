@@ -1,7 +1,7 @@
 import { USERS_CLIENT } from '@app/common/client-config/clients.constants'
-import { UserDto } from '@app/contracts/users/user.dto'
+import { User } from '@app/contracts/users/user.dto'
 import { USERS_PATTERNS } from '@app/contracts/users/users.patterns'
-import { Inject } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { ClientProxy } from '@nestjs/microservices'
 import { PassportStrategy } from '@nestjs/passport'
@@ -19,8 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
 		})
 	}
-
-	async validate({ id }: Pick<UserDto, 'id'>) {
+	async validate({ id }: Pick<User, 'id'>) {
 		return lastValueFrom(this.usersClient.send(USERS_PATTERNS.GET_BY_ID, id))
 	}
 }
