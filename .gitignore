@@ -15,6 +15,11 @@ lerna-debug.log*
 # OS
 .DS_Store
 
+# ESlint
+.eslint.config.mjs
+
+# Prettier
+.prettierrc
 
 # Tests
 /coverage
@@ -52,10 +57,7 @@ pids
 *.pid
 *.seed
 *.pid.lock
+.bun.lock
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-
-/libs/database/src/prisma/prisma-client
-
-/generated/prisma
