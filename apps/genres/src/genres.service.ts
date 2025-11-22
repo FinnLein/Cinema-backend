@@ -1,8 +1,84 @@
-import { Injectable } from '@nestjs/common';
+import { generateSlug } from '@app/common/utils/generate-slug'
+import { getValidDataBaseData } from '@app/common/utils/get-valid-data'
+import { CreateGenreDto } from '@app/contracts/genres/create-genre.dto'
+import { Genre } from '@app/contracts/genres/genre.dto'
+import { UpdateGenreDto } from '@app/contracts/genres/update-genre.dto'
+import { GENRES_SERVICE } from '@app/database/knex/knex.module'
+import { HttpStatus, Injectable } from '@nestjs/common'
+import { RpcException } from '@nestjs/microservices'
+import { Knex } from 'knex'
+import { InjectConnection } from 'nest-knexjs'
 
 @Injectable()
 export class GenresService {
-  getHello(): string {
-    return 'Hello World!';
+  private readonly tableName = 'genres'
+
+  constructor(
+    @InjectConnection(GENRES_SERVICE) private readonly knex: Knex
+  ) { }
+
+  public async getAll(): Promise<Genre[]> {
+    const genre = await this.knex(this.tableName).select('*')
+
+    if (!genre) throw new RpcException({ statusCode: HttpStatus.BAD_REQUEST, message: 'There is no genres yet' })
+
+    return genre
+  }
+
+  public async getById(id: string): Promise<Genre> {
+    const [genre] = await this.knex(this.tableName).where({ id })
+    return genre
+  }
+
+  public async getBySlug(slug: string): Promise<Genre> {
+    const [genre] = await this.knex<Genre>(this.tableName).where({ slug })
+
+    if (!genre) {
+      throw new RpcException({ statusCode: HttpStatus.NOT_FOUND, message: 'Genre not found.' })
+    }
+
+    return genre
+  }
+
+  public async create(dto: CreateGenreDto) {
+    const { slug, ...genres } = dto
+    const data = getValidDataBaseData(genres)
+
+    try {
+      const [genre] = await this.knex(this.tableName)
+        .insert({
+          slug: generateSlug(dto.name),
+          ...data
+        })
+        .returning('*')
+
+      return genre
+    } catch (error) {
+      if (error.code === '23505') {
+        throw new RpcException({ statusCode: HttpStatus.CONFLICT, message: `Genre title ${dto.name} already exists.` })
+      }
+      throw new RpcException({ statusCode: HttpStatus.BAD_GATEWAY, message: 'An unexpected error occurred.' })
+    }
+  }
+  public async update(id: string, dto: UpdateGenreDto) {
+    const { slug, ...genres } = dto
+    const data = getValidDataBaseData(genres)
+
+    try {
+      const [genre] = await this.knex(this.tableName)
+        .where({ id })
+        .update({
+          slug: generateSlug(dto.name),
+          ...data
+        })
+        .returning('*')
+
+      return genre
+    } catch (error) {
+      if (error.code === '23505') {
+        throw new RpcException({ statusCode: HttpStatus.CONFLICT, message: `Genre title ${dto.name} already exists.` })
+      }
+      throw error
+    }
   }
 }

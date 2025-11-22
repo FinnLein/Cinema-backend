@@ -78,7 +78,6 @@ export class JwtTokensService {
 
   private async saveRefreshToken(userId: string, refreshToken: string) {
     const key = createHashSha256(refreshToken)
-    console.log(userId, 'save')
     return this.redis.set(this.REDIS_REFRESH_TOKEN_PREFIX + userId, key, 'EX', REFRESH_TOKEN_EXPIRATION * 24 * 60 * 60)
   }
 

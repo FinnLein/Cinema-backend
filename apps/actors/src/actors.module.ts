@@ -1,11 +1,11 @@
+import { CustomKnexModule } from '@app/database/knex/knex.module'
 import { Module } from '@nestjs/common'
 import { ActorsController } from './actors.controller'
 import { ActorsService } from './actors.service'
-import { ActorsPrismaService } from './prisma'
 
 @Module({
-  imports: [],
+  imports: [CustomKnexModule],
   controllers: [ActorsController],
-  providers: [ActorsService, ActorsPrismaService],
+  providers: [ActorsService],
 })
 export class ActorsModule {}

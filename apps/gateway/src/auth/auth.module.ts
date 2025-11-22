@@ -5,6 +5,7 @@ import { IS_DEV } from '@app/common/utils/is-dev.util'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { APP_GUARD } from '@nestjs/core'
+import { JwtModule } from '@nestjs/jwt'
 import { ClientsModule } from '@nestjs/microservices'
 import { ThrottlerModule } from '@nestjs/throttler'
 import { ProvidersModule } from 'apps/auth/src/oauth/providers.module'
@@ -52,6 +53,7 @@ import { TokensService } from './tokens.service'
       ignoreEnvFile: !IS_DEV
     }),
     ProvidersModule,
+    JwtModule
   ],
   controllers: [AuthController],
   providers: [
