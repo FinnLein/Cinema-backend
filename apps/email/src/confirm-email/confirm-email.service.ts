@@ -52,14 +52,14 @@ export class ConfirmEmailService {
 		// Нет денег для провайдера пока
 		// return this.emailService.sendConfirmationToken(verificationToken.email, verificationToken.token)
 		console.log(token)
-		return token
+		return true
 	}
 
 	private async generate(email: string) {
 		const token = uuid()
 		const expiresAt = new Date(new Date().getTime() + 3600 * 1000)
 
-		const existingToken = await lastValueFrom(this.tokensClient.send<Token>(TOKENS_PATTERNS.FIND, { email, type: TokenType.EMAIL_CONFIRMATION }))
+		const existingToken = await lastValueFrom(this.tokensClient.send<Token>(TOKENS_PATTERNS.FIND_BY_EMAIL, { email, type: TokenType.EMAIL_CONFIRMATION }))
 
 		if (existingToken) await lastValueFrom(this.tokensClient.send(TOKENS_PATTERNS.DELETE, existingToken.id))
 

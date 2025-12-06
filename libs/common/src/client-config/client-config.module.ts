@@ -16,6 +16,7 @@ import { ClientConfigService } from './client-config.service'
       TOKENS_CLIENT_PORT: joi.number().default(6379),
       USERS_CLIENT_PORT: joi.number().default(6379),  
       JWT_TOKENS_CLIENT_PORT: joi.number().default(6379),  
+      MEDIA_CLIENT_PORT: joi.number().default(6379)
     })
   })],
   providers: [ClientConfigService],

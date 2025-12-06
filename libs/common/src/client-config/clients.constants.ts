@@ -7,4 +7,5 @@ export const MOVIES_CLIENT = Symbol('MOVIES_CLIENT')
 export const TOKENS_CLIENT = Symbol('TOKENS_CLIENT')
 export const USERS_CLIENT = Symbol('USERS_CLIENT')
 export const JWT_TOKENS_CLIENT = Symbol('JWT_TOKENS_CLIENT')
+export const MEDIA_CLIENT = Symbol('MEDIA_CLIENT')
 

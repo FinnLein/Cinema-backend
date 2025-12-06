@@ -5,6 +5,12 @@ import { Observable, throwError } from 'rxjs'
 @Catch(RpcException)
 export class CustomRpcExceptionFilter implements RpcExceptionFilter {
   catch(exception: RpcException, host: ArgumentsHost): Observable<any> {
-    return throwError(() => exception.getError())
+    const error: any = exception.getError()
+    const errorResponse = {
+      statusCode: error.statusCode,
+      message: error.message
+    }
+
+    return throwError(() => errorResponse)
   }
 }

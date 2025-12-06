@@ -6,6 +6,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, Res, U
 import { ConfigService } from '@nestjs/config'
 import { ThrottlerGuard } from '@nestjs/throttler'
 //! Very bad decision. It's directly from microservices
+import { Public } from '@app/common/decorators/public.decorator'
 import { ProvidersService } from 'apps/auth/src/oauth/providers.service'
 import { type Response } from 'express'
 import { AuthService } from './auth.service'
@@ -24,12 +25,14 @@ export class AuthController {
   }
 
   // Auth
-
+  @Public()
   @Post('register')
   @HttpCode(HttpStatus.OK)
   public async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto)
   }
+
+  @Public()
   @Post('login')
   @UseGuards(ThrottlerGuard)
   @HttpCode(HttpStatus.OK)
@@ -61,6 +64,7 @@ export class AuthController {
 
   // OAuth
 
+  @Public()
   @UseGuards(ProvidersGuard)
   @Get('oauth/connect/:provider')
   @HttpCode(HttpStatus.OK)
@@ -85,6 +89,8 @@ export class AuthController {
     }
   }
 
+
+  @Public()
   @UseGuards(ProvidersGuard)
   @Get('oauth/callback/:provider')
   public async callback(
@@ -110,7 +116,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   public async refresh(
     @RefreshToken() refreshToken: string,
-    @Res({passthrough: true}) res: Response
+    @Res({ passthrough: true }) res: Response
   ) {
     const { accessToken, refreshToken: newRefreshToken, ...response } = await this.authService.refresh(refreshToken)
 

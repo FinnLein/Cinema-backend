@@ -12,9 +12,9 @@ import { ProvidersModule } from 'apps/auth/src/oauth/providers.module'
 import { ProvidersService } from 'apps/auth/src/oauth/providers.service'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
-import { CheckBlacklistGuard } from './guards/check-blacklist.guard'
 import { JwtStrategy } from './strategies/jwt.strategy'
 import { TokensService } from './tokens.service'
+import { CheckBlacklistGuard } from './guards/check-blacklist.guard'
 
 @Module({
   imports: [

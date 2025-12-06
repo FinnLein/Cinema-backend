@@ -2,7 +2,9 @@ import { Auth } from '@app/common/decorators/auth.decorator'
 import { CreateUserDto } from '@app/contracts/users/create-user.dto'
 import { UpdateUserDto } from '@app/contracts/users/update-user.dto'
 import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post } from '@nestjs/common'
-import { CurrentUser } from './decorators/current-user.decorator'
+
+import { CurrentUser } from '@app/common/decorators/current-user.decorator'
+import { Public } from '@app/common/decorators/public.decorator'
 import { UsersService } from './users.service'
 
 @Controller('users')
@@ -10,6 +12,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
   @Get()
+  @Public()
   @HttpCode(HttpStatus.OK)
   public async getAll() {
     return this.usersService.getAll()

@@ -3,6 +3,7 @@ import { CreateGenreDto } from '@app/contracts/genres/create-genre.dto'
 import { Genre } from '@app/contracts/genres/genre.dto'
 import { GENRES_PATTERNS } from '@app/contracts/genres/genres.patterns'
 import { UpdateGenreDto } from '@app/contracts/genres/update-genre.dto'
+
 import { Inject, Injectable } from '@nestjs/common'
 import { ClientProxy } from '@nestjs/microservices'
 import { lastValueFrom } from 'rxjs'

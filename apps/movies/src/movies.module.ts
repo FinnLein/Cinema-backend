@@ -5,8 +5,13 @@ import { CustomKnexModule } from '@app/database/knex/knex.module'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { ClientsModule } from '@nestjs/microservices'
+import { CommentsController } from './comments/comments.controller'
+import { CommentsService } from './comments/comments.service'
 import { MoviesController } from './movies.controller'
 import { MoviesService } from './movies.service'
+import { RatingsController } from './ratings/ratings.controller'
+import { RatingsService } from './ratings/ratings.service'
+import { RedisModule } from '@app/database/redis/redis.module'
 
 @Module({
   imports: [
@@ -25,9 +30,10 @@ import { MoviesService } from './movies.service'
       },
     ]),
     ConfigModule,
-    CustomKnexModule
+    CustomKnexModule,
+    RedisModule,
   ],
-  controllers: [MoviesController],
-  providers: [MoviesService],
+  controllers: [MoviesController, CommentsController, RatingsController],
+  providers: [MoviesService, CommentsService, RatingsService],
 })
 export class MoviesModule { }

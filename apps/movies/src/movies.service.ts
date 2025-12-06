@@ -1,4 +1,5 @@
 import { ACTORS_CLIENT, GENRES_CLIENT } from '@app/common/client-config/clients.constants'
+import { DB_ERROR_CODES } from '@app/common/constants/db-errors.constant'
 import { generateSlug } from '@app/common/utils/generate-slug'
 import { getValidDataBaseData } from '@app/common/utils/get-valid-data'
 import { Actor } from '@app/contracts/actors/actor.dto'
@@ -7,16 +8,21 @@ import { Genre } from '@app/contracts/genres/genre.dto'
 import { GENRES_PATTERNS } from '@app/contracts/genres/genres.patterns'
 import { CreateMovieDto } from '@app/contracts/movie/create-movie.dto'
 import { FilterMovieDto, MovieSort } from '@app/contracts/movie/filter.dto'
-import { Movie } from '@app/contracts/movie/movie.dto'
+import { FullMovie, Movie } from '@app/contracts/movie/movie.dto'
 import { IPaginationResponse } from '@app/contracts/movie/pagination-response.interface'
 import { UpdateMovieDto } from '@app/contracts/movie/update-movie.dto'
 import { MOVIES_SERVICE } from '@app/database/knex/knex.module'
+import { REDIS_CLIENT } from '@app/database/redis/redis.constants'
 import { HttpStatus, Inject, Injectable } from '@nestjs/common'
 import { ClientProxy, RpcException } from '@nestjs/microservices'
+import Redis from 'ioredis'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
-import { EmptyError, lastValueFrom } from 'rxjs'
-import { FullMovie } from './../../../libs/contracts/src/movie/movie.dto'
+import { lastValueFrom } from 'rxjs'
+import { CommentsService } from './comments/comments.service'
+import { RatingsService } from './ratings/ratings.service'
+import { IJunctionTableInterface } from './types/junction-table.interface'
+import { IResource } from './types/resource.interface'
 
 @Injectable()
 export class MoviesService {
@@ -27,11 +33,23 @@ export class MoviesService {
 	constructor(
 		@Inject(GENRES_CLIENT) private readonly genreClient: ClientProxy,
 		@Inject(ACTORS_CLIENT) private readonly actorsClient: ClientProxy,
+		@Inject(REDIS_CLIENT) private readonly redisClient: Redis,
 		@InjectConnection(MOVIES_SERVICE) private readonly knex: Knex,
+		private readonly commentsService: CommentsService,
+		private readonly ratingsService: RatingsService
 	) { }
 
 	public async getAll(dto: FilterMovieDto = {}): Promise<IPaginationResponse<FullMovie>> {
-		const { query, limit = 12, page = 1 } = await this.getFilteredMovies(dto)
+		// const cacheKey = 'movies:all'
+
+		// const cached = await this.redisClient.get(cacheKey)
+
+		// if (cached) {
+		// 	return JSON.parse(cached)
+		// }
+
+		const { query, limit, page } = await this.getFilteredMovies(dto)
+
 
 		const movies: Movie[] = await query
 
@@ -47,7 +65,7 @@ export class MoviesService {
 
 		const fullMovies = await this.getFullMovies(movies)
 
-		return {
+		const result = {
 			data: fullMovies,
 			meta: {
 				totalCount,
@@ -56,33 +74,98 @@ export class MoviesService {
 				limit: +limit
 			}
 		}
+
+		// await this.redisClient.set(cacheKey, JSON.stringify(result), 'EX', 60)
+
+		return result
 	}
 
-	public async getById(id: string): Promise<FullMovie> {
+	public async getById(id: string): Promise<Movie> {
 		const [movie] = await this.knex<Movie>(this.tableName).where({ id })
-
-		const fullMovie = await this.getFullMovie(movie)
-		return fullMovie
-	}
-
-	public async getBySlug(slug: string): Promise<FullMovie> {
-		const [movie] = await this.knex<Movie>(this.tableName).where({ slug })
 
 		if (!movie) throw new RpcException({ statusCode: HttpStatus.NOT_FOUND, message: 'Movie not found.' })
 
-		const fullMovie = await this.getFullMovie(movie)
+		return movie
+	}
+
+	public async getFullMovie(id: string): Promise<FullMovie> {
+		const movie = await this.getById(id)
+
+		const genres = await this.getResource<Genre>({
+			movieId: movie.id,
+			tableName: this.moviesGenres,
+			field: 'genre_id',
+			client: this.genreClient,
+			clientPattern: GENRES_PATTERNS.GET_BY_ID
+		})
+		const actors = await this.getResource<Actor>({
+			movieId: movie.id,
+			tableName: this.moviesActors,
+			field: 'actor_id',
+			client: this.actorsClient,
+			clientPattern: ACTORS_PATTERNS.GET_BY_ID
+		})
+
+		const comments = await this.commentsService.getAll(movie.id)
+		const rating = await this.ratingsService.get(movie.id)
+
+		return { ...movie, genres, actors, comments, rating }
+	}
+
+	private async getFullMovies(movies: Movie[]): Promise<FullMovie[]> {
+		return Promise.all(
+			movies.map(async m => {
+				const genres = await this.getResource<Genre>({
+					movieId: m.id,
+					tableName: this.moviesGenres,
+					field: 'genre_id',
+					client: this.genreClient,
+					clientPattern: GENRES_PATTERNS.GET_BY_ID
+				})
+				const actors = await this.getResource<Actor>({
+					movieId: m.id,
+					tableName: this.moviesActors,
+					field: 'actor_id',
+					client: this.actorsClient,
+					clientPattern: ACTORS_PATTERNS.GET_BY_ID
+				})
+
+				return { ...m, genres, actors }
+			})
+		)
+	}
+
+	public async getBySlug(slug: string): Promise<FullMovie> {
+		const cacheKey = `movies:${slug}`
+		const cached = await this.redisClient.get(cacheKey)
+
+		if (cached) {
+			return JSON.parse(cached)
+		}
+
+		const movie = await this.knex<Movie>(this.tableName).where({ slug }).first()
+
+		if (!movie) throw new RpcException({ statusCode: HttpStatus.NOT_FOUND, message: 'Movie not found.' })
+
+		const fullMovie = await this.getFullMovie(movie.id)
+
+		await this.redisClient.set(cacheKey, JSON.stringify(fullMovie), 'EX', 60)
+
 		return fullMovie
 	}
 
-	public async getByGenre(dto: FilterMovieDto = {}, genre: string): Promise<IPaginationResponse<FullMovie>> {
-		const { query, page = 1, limit = 12 } = await this.getFilteredMovies(dto)
+	public async getByGenre(genre: string, dto: FilterMovieDto = {}): Promise<IPaginationResponse<FullMovie>> {
+		const cacheKey = `movies:byGenre:${genre}`
+		const cached = await this.redisClient.get(cacheKey)
+
+		if (cached) {
+			return JSON.parse(cached)
+		}
+
+		const { query, page, limit } = await this.getFilteredMovies(dto)
 
 		try {
 			const existingGenre = await lastValueFrom(this.genreClient.send<Genre>(GENRES_PATTERNS.GET_BY_SLUG, generateSlug(genre)))
-
-			if (!existingGenre) {
-				throw new RpcException({ statusCode: HttpStatus.NOT_FOUND, message: 'Genre not found.' })
-			}
 
 			const movieIds = await this.knex(this.moviesGenres).where({ genre_id: existingGenre.id }).select('movie_id')
 
@@ -105,7 +188,8 @@ export class MoviesService {
 			const totalPages = Math.ceil(totalCount / +limit)
 
 			const fullMovies = await this.getFullMovies(movies)
-			return {
+
+			const result = {
 				data: fullMovies,
 				meta: {
 					totalCount,
@@ -114,18 +198,67 @@ export class MoviesService {
 					currentPage: +page
 				}
 			}
+
+			await this.redisClient.set(cacheKey, JSON.stringify(result), 'EX', 60)
+
+			return result
 		} catch (error) {
-			if (error instanceof EmptyError) {
-				console.error('No elements in sequence error:', error.message)
-				throw new RpcException({ statusCode: HttpStatus.NOT_FOUND, message: 'Genre not found.' })
-			}
-			throw new RpcException({ statusCode: HttpStatus.BAD_REQUEST, message: "An unexpected error occurred." })
+			throw new RpcException({ statusCode: error.statusCode, message: error.message })
+		}
+	}
+
+	public async getByActor(actor: string, dto: FilterMovieDto = {}): Promise<IPaginationResponse<FullMovie>> {
+		const cacheKey = `movies:byActor:${actor}`
+		const cached = await this.redisClient.get(cacheKey)
+
+		if (cached) {
+			return JSON.parse(cached)
 		}
 
+		const { query, page = 1, limit = 12 } = await this.getFilteredMovies(dto)
+
+		try {
+			const existingActor = await lastValueFrom(this.actorsClient.send<Actor>(ACTORS_PATTERNS.GET_BY_SLUG, generateSlug(actor)))
+
+			const movieIds = await this.knex(this.moviesActors).where({ actor_id: existingActor.id }).select('movie_id')
+
+			const movies: Movie[] = await query.whereIn('id', movieIds.map(m => m.movie_id))
+
+			if (!movies.length) {
+				throw new RpcException({ statusCode: HttpStatus.NOT_FOUND, message: 'Movies with this actor not found.' })
+			}
+
+			const totalCountResult = await this.knex(this.tableName)
+				.whereIn('id', movies.map(m => m.id))
+				.countDistinct('id as count')
+				.first()
+
+			const totalCount = +totalCountResult.count as number
+			const totalPages = Math.ceil(totalCount / +limit)
+
+			const fullMovies = await this.getFullMovies(movies)
+
+			const result = {
+				data: fullMovies,
+				meta: {
+					totalCount,
+					totalPages,
+					limit: +limit,
+					currentPage: +page
+				}
+			}
+
+			await this.redisClient.set(cacheKey, JSON.stringify(result), 'EX', 60)
+
+			return result
+		} catch (error) {
+			throw new RpcException({ statusCode: error.statusCode, message: error.message })
+
+		}
 	}
 
 	public async getSimilar(id: string) {
-		const movie = await this.getById(id)
+		const movie = await this.getFullMovie(id)
 
 		const genreIds = movie.genres.map(g => g.id)
 		const movieIds = await this.knex(this.moviesGenres)
@@ -139,87 +272,153 @@ export class MoviesService {
 		return similarMovies
 	}
 
+	public async getMostPopular() {
+		const maxCount = this.knex(this.tableName).max('count_opened').first()
+		const movie = this.knex(this.tableName).where('count_opened', maxCount).first()
+
+		return movie
+	}
+
 	public async create(dto: CreateMovieDto): Promise<FullMovie> {
 		const { actors, genres, slug, ...movies } = dto
 		const movieData = getValidDataBaseData(movies)
 
-		const validGenres = await this.getValidGenres(genres)
-		const validActors = await this.getValidActors(actors)
-
-		try {
-			const [movie] = await this.knex(this.tableName)
-				.insert({
-					slug: generateSlug(movies.title),
-					...movieData
-				})
-				.returning('*')
-
-			const genresToInsert = validGenres.map(g => ({
-				movie_id: movie.id,
-				genre_id: g.id
-			}))
-			const actorsToInsert = validActors.map(a => ({
-				movie_id: movie.id,
-				actor_id: a.id
-			}))
-
-			await this.knex(this.moviesGenres).insert(genresToInsert)
-			await this.knex(this.moviesActors).insert(actorsToInsert)
-
-			return {
-				...movie,
-				validGenres,
-				validActors
+		const validGenres = await this.getValidResources<Genre>(
+			genres,
+			{
+				client: this.genreClient,
+				clientPattern: GENRES_PATTERNS.GET_BY_SLUG
 			}
-		} catch (error) {
-			if (error.code === '23505') {
-				throw new RpcException({ statusCode: HttpStatus.CONFLICT, message: `Movie title ${dto.title} already exists.` })
-			}
-			throw error
-		}
-	}
-
-	public async update(id: string, dto: UpdateMovieDto): Promise<Movie> {
-		const { slug, ...movies } = dto
-
-		const data = getValidDataBaseData(movies)
-		try {
-			const [movie] = await this.knex<Movie>(this.tableName)
-				.where({ id })
-				.update({
-					slug: generateSlug(dto.title),
-					...data
-				})
-				.returning('*')
-			return movie
-		} catch (error) {
-			if (error.code === '23505') {
-				throw new RpcException({ statusCode: HttpStatus.CONFLICT, message: `Movie title ${dto.title} already exists.` })
-			}
-			throw new RpcException({ statusCode: HttpStatus.BAD_GATEWAY, message: 'An unexpected error occurred.' })
-		}
-	}
-
-	private async getValidGenres(genres: Genre[]) {
-		const validGenresPromise = genres.map(g => lastValueFrom(this.genreClient.send<Genre>(GENRES_PATTERNS.GET_BY_SLUG, generateSlug(g.name)))
 		)
-		const validGenres = await Promise.all(validGenresPromise)
+		const validActors = await this.getValidResources<Actor>(
+			actors,
+			{
+				client: this.actorsClient,
+				clientPattern: ACTORS_PATTERNS.GET_BY_SLUG
+			}
+		)
 
-		if (!validGenres.length) throw new RpcException({ statusCode: HttpStatus.NOT_FOUND, message: 'Genres not found.' })
+		return this.knex.transaction(async trx => {
+			try {
+				const [movie] = await trx<Movie>(this.tableName)
+					.insert({
+						slug: generateSlug(movies.title),
+						...movieData
+					})
+					.returning('*')
 
-		return validGenres
+				await this.createJunctionTable({
+					trx,
+					tableName: this.moviesGenres,
+					relationField: 'genre_id',
+					relations: validGenres,
+					movieId: movie.id
+				})
+				await this.createJunctionTable({
+					trx,
+					tableName: this.moviesActors,
+					relationField: 'actor_id',
+					relations: validActors,
+					movieId: movie.id
+				})
+
+				return {
+					...movie,
+					genres: validGenres,
+					actors: validActors
+				}
+			} catch (error) {
+				if (error.code === DB_ERROR_CODES.UNIQUE_VIOLATION) {
+					throw new RpcException({ statusCode: HttpStatus.CONFLICT, message: `Movie title ${dto.title} already exists.` })
+				}
+			}
+		})
+
 	}
-	private async getValidActors(actors: Actor[]) {
-		const validActorsPromise = actors.map(a => lastValueFrom(this.actorsClient.send<Actor>(ACTORS_PATTERNS.GET_BY_SLUG, generateSlug(a.name))))
 
-		const validActors = await Promise.all(validActorsPromise)
+	public async update(id: string, dto: UpdateMovieDto): Promise<FullMovie> {
+		const { slug, genres, actors, ...movies } = dto
 
-		if (!validActors.length) throw new RpcException({ statusCode: HttpStatus.NOT_FOUND, message: 'Actors not found.' })
+		const movieData = getValidDataBaseData(movies)
+		const validGenres = await this.getValidResources<Genre>(
+			genres,
+			{
+				client: this.genreClient,
+				clientPattern: GENRES_PATTERNS.GET_BY_SLUG
+			}
+		)
+		const validActors = await this.getValidResources<Actor>(
+			genres,
+			{
+				client: this.actorsClient,
+				clientPattern: ACTORS_PATTERNS.GET_BY_SLUG
+			}
+		)
 
-		return validActors
+		return this.knex.transaction(async trx => {
+			try {
+				const [movie] = await trx<Movie>(this.tableName)
+					.where({ id })
+					.update({
+						slug: generateSlug(dto?.title),
+						...movieData
+					})
+					.returning('*')
+
+				if (!movie) throw new RpcException({ statusCode: HttpStatus.NOT_FOUND, message: 'Movie not found' })
+
+				await this.updateJunctionTable({
+					trx,
+					tableName: this.moviesGenres,
+					relations: validGenres,
+					movieId: movie.id,
+					relationField: 'genre_id'
+				})
+
+				await this.updateJunctionTable({
+					trx,
+					tableName: this.moviesActors,
+					relations: validActors,
+					movieId: movie.id,
+					relationField: 'actor_id'
+				})
+
+				return {
+					...movie,
+					genres: validGenres,
+					actors: validActors
+				}
+			} catch (error) {
+				throw error
+			}
+		})
+
 	}
+
+	public async delete(id: string) {
+		const movie = await this.getById(id)
+
+		await this.knex.transaction(async trx => {
+			await trx(this.tableName)
+				.where({ id })
+				.del()
+
+			await trx(this.moviesActors)
+				.where('movie_id', id)
+				.del()
+
+			await trx(this.moviesGenres)
+				.where('movie_id', id)
+				.del()
+		})
+
+		return { message: `Movie ${movie.title} deleted` }
+	}
+
+	// Filters
+
 	private async getFilteredMovies(dto: FilterMovieDto = {}) {
-		const { page, limit, searchTerm, sort, genres, rating } = dto
+		const { page = 1, limit = 12, searchTerm, sort, genres, rating } = dto
 		const offset = (+page - 1) * +limit
 
 		const query = this.knex(this.tableName)
@@ -230,11 +429,11 @@ export class MoviesService {
 
 		if (searchTerm) await this.getSearchTerm(searchTerm, query)
 
-		if (sort) await this.getSortFilter(sort, query)
-
 		if (genres) await this.getGenresFilter(genres, query)
 
 		if (rating) await this.getRatingFilter(rating, query)
+
+		await this.getSortFilter(sort, query)
 
 		return {
 			query,
@@ -246,7 +445,12 @@ export class MoviesService {
 		switch (sort) {
 			case 'OLDEST': query.orderBy('created_at', 'asc')
 			case 'NEWEST': query.orderBy('created_at', 'desc')
-			default: query.orderBy('created_at', 'desc')
+			case 'MOST_POPULAR': query.orderBy('count_opened', 'desc')
+			case 'LESS_POPULAR': query.orderBy('count_opened', 'asc')
+			default: query.orderBy([
+				{ column: 'count_opened', order: 'desc' },
+				{ column: 'created_at', order: 'desc' },
+			])
 		}
 	}
 	private async getSearchTerm(searchTerm: string, query: Knex.QueryBuilder) {
@@ -266,39 +470,86 @@ export class MoviesService {
 		const ratings = rating.split('|').map(r => +r)
 		query.whereIn('rating', ratings)
 	}
-	private async getFullMovies(movies: Movie[]): Promise<FullMovie[]> {
-		return Promise.all(
-			movies.map(async m => {
-				const genres = await this.getGenres(m.id)
-				const actors = await this.getActors(m.id)
-				return { ...m, genres, actors }
-			})
-		)
-	}
-	private async getFullMovie(movie: Movie): Promise<FullMovie> {
-		const genres = await this.getGenres(movie.id)
-		const actors = await this.getActors(movie.id)
-		return { ...movie, genres, actors }
-	}
-	private async getGenres(id: string) {
-		const genresIds = await this.knex(this.moviesGenres).where({ movie_id: id }).select('genre_id')
 
-		const genresPromise = genresIds.map(g => {
-			return lastValueFrom(this.genreClient.send<Genre>(GENRES_PATTERNS.GET_BY_ID, g.genre_id))
+	// Create junction tables 
+
+	private async createJunctionTable(dto: IJunctionTableInterface) {
+		const { trx, tableName, relationField, relations, movieId } = dto
+		return Promise.all(relations.map(async r => await trx(tableName).insert({
+			movie_id: movieId,
+			[relationField]: r.id
+		})))
+	}
+
+	// Update junction tables
+
+	private async updateJunctionTable(dto: IJunctionTableInterface) {
+		const { trx, tableName, movieId } = dto
+		await trx(tableName)
+			.where('movie_id', movieId)
+			.del()
+
+		await this.createJunctionTable(dto)
+	}
+
+	// Get actors, users and etc.
+
+	private async getResource<T>(dto: IResource) {
+		const { tableName, movieId, field, client, clientPattern } = dto
+		const resourceIds = await this.knex(tableName).where({ movie_id: movieId }).select(field)
+
+		const resourcePromise = resourceIds.map(r => {
+			const ids = Object.values(r)
+
+			for (const id of ids) {
+				return lastValueFrom(client.send<T>(clientPattern, id))
+			}
+		})
+		const resource = await Promise.all(resourcePromise)
+
+		return resource
+	}
+
+	// Get valid actors, users and etc.
+
+	private async getValidResources<T>(resource: T[], dto: IResource) {
+		const { client, clientPattern } = dto
+
+		const validResourcePromise = resource.map(r => {
+			const slugs = Object.values(r)
+
+			for (const slug of slugs) {
+				return lastValueFrom(client.send<T>(clientPattern, generateSlug(slug)))
+			}
 		})
 
-		const genres = await Promise.all(genresPromise)
+		const validResource = await Promise.all(validResourcePromise)
 
-		return genres
+		return validResource
 	}
-	private async getActors(id: string) {
-		const actorsIds = await this.knex(this.moviesActors).where({ movie_id: id }).select('actor_id')
 
-		const actorsPromise = actorsIds.map(g => {
-			return lastValueFrom(this.genreClient.send<Actor>(ACTORS_PATTERNS.GET_BY_ID, g.actor_id))
+	// Handle events
+
+	public async handleActorDeleted(id: string) {
+		return this.handleResourceDeleted(id, {
+			tableName: this.moviesActors,
+			field: 'actor_id'
 		})
-		const actors = await Promise.all(actorsPromise)
+	}
+	public async handleGenreDeleted(id: string) {
+		return this.handleResourceDeleted(id, {
+			tableName: this.moviesGenres,
+			field: 'genre_id'
+		})
+	}
 
-		return actors
+	private async handleResourceDeleted(id: string, dto: Pick<IResource, 'tableName' | 'field'>) {
+		const { tableName, field } = dto
+		const moviesIds = await this.knex(tableName)
+			.where(field, id)
+			.select('movie_id')
+
+		const promise = moviesIds.map(m => this.delete(m.movie_id))
+		return Promise.all(promise)
 	}
 }

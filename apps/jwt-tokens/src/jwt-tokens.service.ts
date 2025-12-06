@@ -78,11 +78,13 @@ export class JwtTokensService {
 
   private async saveRefreshToken(userId: string, refreshToken: string) {
     const key = createHashSha256(refreshToken)
+
     return this.redis.set(this.REDIS_REFRESH_TOKEN_PREFIX + userId, key, 'EX', REFRESH_TOKEN_EXPIRATION * 24 * 60 * 60)
   }
 
   private async verifyRefreshToken(userId: string, refreshToken: string) {
     const key = createHashSha256(refreshToken)
+
     const token = await this.redis.get(this.REDIS_REFRESH_TOKEN_PREFIX + userId)
 
     if (token !== key) throw new RpcException({ statusCode: HttpStatus.UNAUTHORIZED, message: 'Invalid refresh token' })

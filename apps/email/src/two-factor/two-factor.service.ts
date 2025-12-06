@@ -24,7 +24,7 @@ export class TwoFactorService {
 		// return this.emailService.sendTwoFactor(email, token)
 
 		console.log(token)
-		return token
+		return true
 	}
 
 	public async verifyToken(dto: TwoFactorDto) {

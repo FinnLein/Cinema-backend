@@ -48,4 +48,7 @@ export class ClientConfigService {
 	get JwtTokensClientOptions(): ClientOptions {
 		return this.getClientOptions('JWT_TOKENS_CLIENT_PORT')
 	}
+	get MediaClientOptions(): ClientOptions {
+		return this.getClientOptions('MEDIA_CLIENT_PORT')
+	}
 }

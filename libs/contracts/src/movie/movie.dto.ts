@@ -1,6 +1,8 @@
-import { IsBoolean, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
 import { Actor } from '../actors/actor.dto'
 import { Genre } from '../genres/genre.dto'
+import { CommentDto } from './comments/comment.dto'
+import { type IPaginationResponse } from './pagination-response.interface'
 
 export class Movie {
   @IsString()
@@ -43,10 +45,6 @@ export class Movie {
   @IsBoolean()
   isSentTelegram?: boolean
 
-  @IsNotEmpty()
-  @IsInt()
-  rating: number
-
   @IsOptional()
   @IsBoolean()
   countOpened?: number
@@ -58,4 +56,10 @@ export class FullMovie extends Movie {
 
   @IsNotEmpty()
   genres: Genre[]
+
+  @IsOptional()
+  comments?: IPaginationResponse<CommentDto> 
+
+  @IsOptional()
+  rating?: number
 }

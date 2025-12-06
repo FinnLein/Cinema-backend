@@ -1,4 +1,3 @@
-import { CustomRpcExceptionFilter } from '@app/common/filters/rpc-exception.filter'
 import { getMicroserviceOptions } from '@app/common/utils/get-microservice-options.util'
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
@@ -12,7 +11,6 @@ async function bootstrap() {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(ActorsModule, getMicroserviceOptions(config))
 
-  app.useGlobalFilters(new CustomRpcExceptionFilter())
   app.useGlobalPipes(new ValidationPipe())
 
   await app.listen()

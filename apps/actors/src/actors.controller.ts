@@ -28,5 +28,9 @@ export class ActorsController {
   public async update(@Payload() payload: { id: string, dto: UpdateActorDto }) {
     return this.actorsService.update(payload.id, payload.dto)
   }
+  @MessagePattern(ACTORS_PATTERNS.DELETE)
+  public async delete(@Payload() id: string) {
+    return this.actorsService.delete(id)
+  }
 
 }

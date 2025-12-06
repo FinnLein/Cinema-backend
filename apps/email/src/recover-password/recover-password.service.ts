@@ -31,7 +31,7 @@ export class RecoverPasswordService {
 		// return this.emailService.sendRecoverPassword(dto.email, token)
 
 		console.log(token)
-		return token
+		return true
 	}
 
 	public async newPassword(dto: NewPasswordDto, token: string) {

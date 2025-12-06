@@ -1,4 +1,4 @@
-import { CustomRpcExceptionFilter } from '@app/common/filters/rpc-exception.filter'
+import { RpcExceptionFilter } from '@app/common/filters/rpc'
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
@@ -16,9 +16,9 @@ async function bootstrap() {
     exposedHeaders: 'set-cookie'
   })
 
+  app.useGlobalFilters(new RpcExceptionFilter())
   app.use(cookieParser())
-  app.useGlobalFilters(new CustomRpcExceptionFilter())
-  app.useGlobalPipes(new ValidationPipe({transform: true}))
+  app.useGlobalPipes(new ValidationPipe({ transform: true }))
 
 
   await app.listen(config.get<number>('APPLICATION_PORT'))
